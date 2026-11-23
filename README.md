@@ -4,7 +4,21 @@
 
 Працює на вашому комп'ютері (Flask + SQLite) і нікуди не відправляє дані.
 
-## Запуск
+## Швидкий старт на своєму комп'ютері
+
+Потрібні [Python 3.10+](https://www.python.org/downloads/) і [Git](https://git-scm.com/downloads).
+
+```bash
+git clone -b claude/take-b9y2qc https://github.com/Alexey0629/Holost-14-2.git vsi-proekty
+cd vsi-proekty
+```
+
+- **Windows:** двічі клацніть `start.bat`
+- **macOS / Linux:** `./start.sh`
+
+Скрипт сам створить віртуальне оточення, встановить залежності та відкриє браузер на http://127.0.0.1:5000. Наступного разу — просто знову запустіть той самий скрипт.
+
+## Запуск вручну
 
 ```bash
 python -m venv venv
