@@ -1,4 +1,4 @@
-/* Спільні утиліти Holost: запити до API, тости, форматування, markdown, дифф. */
+/* Спільні утиліти: запити до API, тости, форматування, markdown, дифф. */
 "use strict";
 
 const H = (() => {
@@ -16,7 +16,7 @@ const H = (() => {
     try {
       res = await fetch(url, opts);
     } catch (e) {
-      throw new Error("Сервер недоступний. Чи запущений Holost?");
+      throw new Error("Сервер недоступний. Чи запущено «Всі проекти» (python run.py)?");
     }
     const ct = res.headers.get("content-type") || "";
     const data = ct.includes("json") ? await res.json() : { error: (await res.text()).slice(0, 500) };
@@ -184,8 +184,8 @@ const H = (() => {
       (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     const next = cur === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
-    try { localStorage.setItem("holost-theme", next); } catch (e) { /* ігноруємо */ }
-    document.dispatchEvent(new CustomEvent("holost:theme", { detail: next }));
+    try { localStorage.setItem("allprojects-theme", next); } catch (e) { /* ігноруємо */ }
+    document.dispatchEvent(new CustomEvent("allprojects:theme", { detail: next }));
   });
 
   return { api, esc, toast, fail, size, date, ago, md, diff, busy, copy, $, $$ };

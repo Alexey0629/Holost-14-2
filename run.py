@@ -4,10 +4,10 @@
     python run.py --port 8080 --open
 
 Змінні оточення:
-    HOLOST_ROOTS            папки з проектами (через ":" на Linux/macOS або ";" на Windows)
-    HOLOST_DATA_DIR         де зберігати базу Holost (за замовчуванням ./instance)
-    HOLOST_COMMAND_TIMEOUT  ліміт часу для тестів / оновлення з проду, секунд (600)
-    HOLOST_ALLOWED_HOSTS    дозволені хости через кому (127.0.0.1,localhost,::1)
+    ALLPROJECTS_ROOTS             папки з проектами (через ":" на Linux/macOS або ";" на Windows)
+    ALLPROJECTS_DATA_DIR          де зберігати базу застосунку (за замовчуванням ./instance)
+    ALLPROJECTS_COMMAND_TIMEOUT   ліміт часу для тестів / оновлення з проду, секунд (600)
+    ALLPROJECTS_ALLOWED_HOSTS     дозволені хости через кому (127.0.0.1,localhost,::1)
 """
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ import argparse
 import threading
 import webbrowser
 
-from holost import create_app
+from allprojects import create_app
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Holost — локальна система «Всі проекти»")
+    parser = argparse.ArgumentParser(description="Локальна система «Всі проекти»")
     parser.add_argument("--host", default="127.0.0.1", help="адреса (за замовчуванням лише цей комп'ютер)")
     parser.add_argument("--port", type=int, default=5000)
     parser.add_argument("--open", action="store_true", help="відкрити браузер після запуску")

@@ -16,7 +16,7 @@ def test_add_project_reads_readme_and_stack(client, project_id, sample_project):
     data = client.get("/api/projects").get_json()
     [p] = data["projects"]
     assert p["name"] == "demo"
-    assert p["short_desc"] == "Демо-проект для тестів Holost."
+    assert p["short_desc"] == "Демо-проект для тестів."
     assert {"Python", "Flask", "SQLAlchemy"} <= set(p["stack"])
     # повторне додавання — 409 з id існуючого
     res = client.post("/api/projects", json={"path": str(sample_project)})

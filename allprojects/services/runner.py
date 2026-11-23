@@ -23,7 +23,7 @@ def run_command(command: str, cwd: Path | str, timeout: int = 600, env: dict | N
     full_env = os.environ.copy()
     full_env.update({"PYTHONUNBUFFERED": "1", "CI": "1", "NO_COLOR": "1", "FORCE_COLOR": "0",
                      "GIT_TERMINAL_PROMPT": "0"})
-    # Не передаємо проекту віртуальне оточення самого Holost.
+    # Не передаємо проекту віртуальне оточення самого застосунку.
     full_env.pop("VIRTUAL_ENV", None)
     if env:
         full_env.update(env)

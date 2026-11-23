@@ -58,7 +58,7 @@ def init_app(app: Flask) -> None:
         allowed = current_app.config.get("ALLOWED_HOSTS") or set()
         if "*" not in allowed and endpoint not in CSRF_EXEMPT_ENDPOINTS:
             if _hostname(request.host) not in {h.lower() for h in allowed}:
-                abort(403, description="Хост не дозволений. Додайте його в HOLOST_ALLOWED_HOSTS.")
+                abort(403, description="Хост не дозволений. Додайте його в ALLPROJECTS_ALLOWED_HOSTS.")
 
         if request.method in SAFE_METHODS or endpoint in CSRF_EXEMPT_ENDPOINTS:
             return None

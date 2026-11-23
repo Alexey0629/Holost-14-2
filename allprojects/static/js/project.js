@@ -125,7 +125,7 @@
     project = await api(base);
     $("#p-name").textContent = project.name;
     $("#crumb-name").textContent = project.name;
-    document.title = project.name + " · Holost";
+    document.title = project.name + " · Всі проекти";
     $("#p-short").textContent = project.short_desc || "";
     $("#p-path").textContent = project.path;
     $("#p-stack").innerHTML = project.stack.map((s) => `<span class="badge badge-accent">${esc(s)}</span>`).join("");
@@ -346,7 +346,7 @@
         },
       });
       cm.on("change", () => setDirty(cm.getValue() !== savedContent));
-      document.addEventListener("holost:theme", () => cm.setOption("theme", isDark() ? "material-darker" : "default"));
+      document.addEventListener("allprojects:theme", () => cm.setOption("theme", isDark() ? "material-darker" : "default"));
     } else {
       ta.disabled = true;
       ta.addEventListener("input", () => setDirty(ta.value !== savedContent));
@@ -1183,7 +1183,7 @@
     const url = project.ingest_url;
     const py = `import json, sys, traceback, urllib.request
 
-HOLOST_URL = "${url}"
+ALL_PROJECTS_URL = "${url}"
 
 def report_error(exc, level="error"):
     data = {
@@ -1191,12 +1191,12 @@ def report_error(exc, level="error"):
         "traceback": "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)),
         "level": level,
     }
-    req = urllib.request.Request(HOLOST_URL, data=json.dumps(data).encode(),
+    req = urllib.request.Request(ALL_PROJECTS_URL, data=json.dumps(data).encode(),
                                  headers={"Content-Type": "application/json"})
     try:
         urllib.request.urlopen(req, timeout=3)
     except Exception:
-        pass  # Holost не запущений — не заважаємо програмі
+        pass  # «Всі проекти» не запущено — не заважаємо програмі
 
 # Автоматично надсилати всі необроблені винятки:
 def _hook(t, e, tb):

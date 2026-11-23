@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from holost import create_app
+from allprojects import create_app
 
 GIT_ENV = {
     "GIT_AUTHOR_NAME": "Test",
@@ -15,7 +15,7 @@ GIT_ENV = {
 }
 
 SAMPLE_FILES = {
-    "README.md": "# Demo\n\nДемо-проект для тестів Holost.\n\n## Запуск\n\n```\npython app.py\n```\n",
+    "README.md": "# Demo\n\nДемо-проект для тестів.\n\n## Запуск\n\n```\npython app.py\n```\n",
     "requirements.txt": "flask>=3\nsqlalchemy\npytest\n",
     "app.py": (
         "import os\n"
@@ -114,11 +114,11 @@ def sample_project(tmp_path) -> Path:
 
 @pytest.fixture
 def app(tmp_path):
-    data_dir = tmp_path / "holost-data"
+    data_dir = tmp_path / "app-data"
     application = create_app({
         "TESTING": True,
         "DATA_DIR": str(data_dir),
-        "DATABASE": str(data_dir / "holost.db"),
+        "DATABASE": str(data_dir / "projects.db"),
         "COMMAND_TIMEOUT": 60,
     })
     return application

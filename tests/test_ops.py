@@ -22,7 +22,7 @@ def test_run_custom_command_and_failure(client, project_id):
 
 
 def test_command_timeout(app, sample_project):
-    from holost.services import runner
+    from allprojects.services import runner
     res = runner.run_command("sleep 5", sample_project, timeout=1)
     assert res["timed_out"] and res["duration"] < 4
 
@@ -42,10 +42,10 @@ def test_git_status_diff_commit(client, project_id, sample_project):
     assert "+hello" in client.get(f"{base}/diff?path=new.txt").get_json()["diff"]
 
     assert client.post(f"{base}/commit", json={"message": ""}).status_code == 400
-    res = client.post(f"{base}/commit", json={"message": "Зміни з Holost"}).get_json()
+    res = client.post(f"{base}/commit", json={"message": "Зміни із застосунку"}).get_json()
     assert res["status"]["clean"]
     log = client.get(f"{base}/log").get_json()["commits"]
-    assert log[0]["subject"] == "Зміни з Holost"
+    assert log[0]["subject"] == "Зміни із застосунку"
     show = client.get(f"{base}/show/{log[0]['sha']}").get_json()["diff"]
     assert "new.txt" in show
     assert client.get(f"{base}/show/not-a-sha").status_code == 400

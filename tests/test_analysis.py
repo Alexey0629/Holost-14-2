@@ -3,7 +3,7 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from holost.services import dbschema
+from allprojects.services import dbschema
 
 
 def test_db_overview(client, project_id):
