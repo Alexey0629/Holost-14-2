@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Всі проекти{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <h1>Всі проекти</h1>
+    <p class="muted">Локальна система: усі проекти з кодом в одному місці. Відкрийте проект, щоб побачити папки, опис, код, БД, API, помилки, тести та git.</p>
+  </div>
+  <div class="hero-actions">
+    <button class="btn btn-primary" id="btn-scan" type="button">🔄 Сканувати папки</button>
+    <button class="btn" id="btn-add" type="button">➕ Додати проект</button>
+    <button class="btn" id="btn-roots" type="button">⚙️ Папки з проектами</button>
+  </div>
+</section>
+
+<div class="toolbar">
+  <input type="search" id="filter" class="input grow" placeholder="Пошук за назвою, описом, шляхом, тегом…" autocomplete="off">
+  <select id="stack-filter" class="input"><option value="">Усі технології</option></select>
+  <span class="muted" id="count"></span>
+</div>
+
+<div id="projects" class="cards"></div>
+
+<div id="empty" class="empty hidden">
+  <div class="empty-icon">🗂️</div>
+  <h2>Тут поки порожньо</h2>
+  <p>Вкажіть папки, де лежать ваші проекти, і натисніть «Сканувати», або додайте проект вручну за шляхом.</p>
+  <div class="row center">
+    <button class="btn btn-primary" type="button" data-action="roots">⚙️ Вказати папки</button>
+    <button class="btn" type="button" data-action="add">➕ Додати проект</button>
+  </div>
+</div>
+
+<dialog id="dlg-add" class="dialog">
+  <form method="dialog" id="form-add">
+    <h3>Додати проект</h3>
+    <label>Шлях до папки проекту
+      <input class="input" name="path" required placeholder="/home/user/projects/my-app або C:\projects\my-app">
+    </label>
+    <label>Назва (необов'язково)
+      <input class="input" name="name" placeholder="Візьметься з назви папки">
+    </label>
+    <div class="row end">
+      <button class="btn" type="button" data-close>Скасувати</button>
+      <button class="btn btn-primary" value="ok" type="submit">Додати</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-roots" class="dialog">
+  <form method="dialog" id="form-roots">
+    <h3>Папки з проектами</h3>
+    <p class="muted small">По одній папці на рядок. Сканер знайде в них проекти (git, package.json, requirements.txt, go.mod…) до 3 рівнів углиб.</p>
+    <textarea class="input mono" name="roots" rows="6" placeholder="~/projects&#10;~/PycharmProjects"></textarea>
+    <div id="roots-suggestions" class="small"></div>
+    <div class="row end">
+      <button class="btn" type="button" data-close>Скасувати</button>
+      <button class="btn btn-primary" value="ok" type="submit">Зберегти і сканувати</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}

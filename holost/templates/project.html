@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% set cm = 'vendor/codemirror/' %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename=cm ~ 'codemirror.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename=cm ~ 'theme/material-darker.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename=cm ~ 'addon/dialog.css') }}">
+{% endblock %}
+{% block crumbs %}<span class="crumb-sep">/</span> <span id="crumb-name">{{ project.name }}</span>{% endblock %}
+{% block content %}
+<section class="project-head">
+  <div class="project-title">
+    <h1 id="p-name">{{ project.name }}</h1>
+    <p class="muted" id="p-short">{{ project.short_desc }}</p>
+    <div class="row wrap small">
+      <code class="path" id="p-path" title="Скопіювати шлях">{{ project.path }}</code>
+      <span id="p-stack" class="badges"></span>
+      <span id="p-git" class="badges"></span>
+    </div>
+  </div>
+</section>
+
+<nav class="tabs" id="tabs" role="tablist">
+  {% for key, icon, label in tabs %}
+  <button class="tab" type="button" role="tab" data-tab="{{ key }}"><span class="tab-icon">{{ icon }}</span>{{ label }}</button>
+  {% endfor %}
+</nav>
+
+<div id="missing" class="alert alert-error hidden">Папка проекту не знайдена на диску. Перевірте шлях у «Налаштуваннях» або видаліть проект зі списку.</div>
+
+<!-- 📁 Папки -->
+<section class="panel" data-panel="folders">
+  <div class="toolbar">
+    <div class="breadcrumbs grow" id="fold-crumbs"></div>
+    <button class="btn" type="button" id="fold-open">📂 Відкрити в провіднику</button>
+    <button class="btn" type="button" id="fold-copy">📋 Копіювати шлях</button>
+    <button class="btn" type="button" id="fold-newdir">➕ Папка</button>
+    <button class="btn" type="button" id="fold-newfile">➕ Файл</button>
+  </div>
+  <div class="muted small mono" id="fold-abs"></div>
+  <table class="table hover" id="fold-table">
+    <thead><tr><th>Назва</th><th class="num">Розмір</th><th>Змінено</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<!-- 📝 Опис -->
+<section class="panel" data-panel="about">
+  <div class="grid-2">
+    <div class="card">
+      <h3>Короткий опис</h3>
+      <input class="input" id="about-short" maxlength="300" placeholder="Одним реченням: що це за проект">
+      <h3>Теги</h3>
+      <input class="input" id="about-tags" placeholder="бот, клієнт, прод, pet-project">
+      <h3 class="row between">Повний опис <span class="row small">
+        <button class="btn btn-sm" type="button" data-md-toggle="about-full">👁 Перегляд</button></span></h3>
+      <textarea class="input mono" id="about-full" rows="16" placeholder="Markdown: навіщо проект, як влаштований, хто клієнт, домовленості, доступи (без паролів)…"></textarea>
+      <div class="md hidden" id="about-full-preview"></div>
+      <div class="row end"><button class="btn btn-primary" type="button" id="about-save">💾 Зберегти опис</button></div>
+    </div>
+    <div class="card">
+      <h3 class="row between">README проекту <button class="btn btn-sm" type="button" id="about-readme-edit">✏️ Редагувати</button></h3>
+      <div class="md" id="about-readme"><p class="muted">README не знайдено.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 💻 Код -->
+<section class="panel" data-panel="code">
+  <div class="code-layout">
+    <aside class="code-tree card">
+      <div class="row between small">
+        <strong>Файли</strong>
+        <span class="row">
+          <button class="btn btn-sm" type="button" id="code-newfile" title="Новий файл">➕📄</button>
+          <button class="btn btn-sm" type="button" id="code-newdir" title="Нова папка">➕📁</button>
+          <button class="btn btn-sm" type="button" id="code-refresh" title="Оновити">🔄</button>
+        </span>
+      </div>
+      <ul class="tree" id="code-tree"></ul>
+    </aside>
+    <div class="code-main card">
+      <div class="row between code-bar">
+        <div class="row">
+          <strong id="code-file" class="mono">Оберіть файл зліва</strong>
+          <span id="code-dirty" class="badge badge-warn hidden">не збережено</span>
+        </div>
+        <div class="row">
+          <span class="muted small" id="code-info"></span>
+          <button class="btn btn-sm" type="button" id="code-history" disabled title="Git-історія файлу">🕘</button>
+          <button class="btn btn-sm" type="button" id="code-rename" disabled>✏️ Перейменувати</button>
+          <button class="btn btn-sm btn-danger" type="button" id="code-delete" disabled>🗑</button>
+          <button class="btn btn-sm btn-primary" type="button" id="code-save" disabled>💾 Зберегти <kbd>Ctrl+S</kbd></button>
+        </div>
+      </div>
+      <div id="code-editor-wrap" class="editor-wrap"><textarea id="code-editor"></textarea></div>
+    </div>
+  </div>
+</section>
+
+<!-- 🗄 Структура БД -->
+<section class="panel" data-panel="db">
+  <div class="toolbar"><span class="muted grow">SQLite-бази в проекті, SQL-схеми (*.sql) та ORM-моделі (SQLAlchemy, Django, SQLModel).</span>
+    <button class="btn" type="button" data-reload="db">🔄 Оновити</button></div>
+  <div id="db-content"></div>
+</section>
+
+<!-- 🧭 Структура використання -->
+<section class="panel" data-panel="usage">
+  <div class="grid-2">
+    <div id="usage-auto"></div>
+    <div class="card">
+      <h3 class="row between">Як користуватись (ваші нотатки)
+        <button class="btn btn-sm" type="button" data-md-toggle="usage-notes">👁 Перегляд</button></h3>
+      <textarea class="input mono" id="usage-notes" rows="18" placeholder="Як запускати, де прод, які доступи потрібні, порядок деплою, хто користувач, сценарії використання…"></textarea>
+      <div class="md hidden" id="usage-notes-preview"></div>
+      <div class="row end"><button class="btn btn-primary" type="button" id="usage-save">💾 Зберегти</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- 🔌 API -->
+<section class="panel" data-panel="api">
+  <div class="grid-2">
+    <div class="card">
+      <h3>Запит</h3>
+      <div class="row">
+        <select class="input" id="api-method">
+          <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option>
+        </select>
+        <input class="input grow mono" id="api-url" placeholder="/api/users або http://127.0.0.1:8000/api/users">
+        <button class="btn btn-primary" type="button" id="api-send">▶ Надіслати</button>
+      </div>
+      <div class="row small">
+        <label class="grow">Базовий URL <input class="input mono" id="api-base" placeholder="http://127.0.0.1:5000"></label>
+      </div>
+      <label class="small">Заголовки (Key: Value на рядок або JSON)
+        <textarea class="input mono" id="api-headers" rows="3" placeholder="Authorization: Bearer …"></textarea></label>
+      <label class="small">Тіло запиту
+        <textarea class="input mono" id="api-body" rows="6" placeholder='{"name": "test"}'></textarea></label>
+      <label class="small">Нотатки / документація
+        <textarea class="input" id="api-notes" rows="2" placeholder="Що робить цей ендпоінт, параметри, приклади…"></textarea></label>
+      <div class="row">
+        <input class="input grow" id="api-name" placeholder="Назва запиту для збереження">
+        <button class="btn" type="button" id="api-save">💾 Зберегти запит</button>
+        <button class="btn" type="button" id="api-new">🆕</button>
+      </div>
+      <div id="api-response" class="api-response"></div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Збережені запити</h3>
+        <ul class="list" id="api-saved"></ul>
+      </div>
+      <div class="card">
+        <h3 class="row between">Ендпоінти в коді <button class="btn btn-sm" type="button" data-reload="api">🔄</button></h3>
+        <input class="input" id="api-filter" placeholder="Фільтр…">
+        <table class="table hover small" id="api-endpoints"><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 🔍 Пошук -->
+<section class="panel" data-panel="search">
+  <form class="toolbar" id="search-form">
+    <input class="input grow" id="search-q" placeholder="Що шукати в коді проекту…" autocomplete="off">
+    <input class="input" id="search-glob" placeholder="*.py, src/*" style="max-width:12rem">
+    <label class="check"><input type="checkbox" id="search-case"> Aa</label>
+    <label class="check"><input type="checkbox" id="search-regex"> .*</label>
+    <button class="btn btn-primary" type="submit">🔍 Шукати</button>
+  </form>
+  <div id="search-results"></div>
+</section>
+
+<!-- 🖼 Візуал -->
+<section class="panel" data-panel="visual">
+  <form class="toolbar" id="visual-upload">
+    <input class="input" type="file" name="file" accept="image/*" required>
+    <input class="input" name="folder" value="docs/images" title="Папка в проекті">
+    <button class="btn btn-primary" type="submit">⬆️ Завантажити картинку</button>
+    <input class="input grow" id="visual-filter" placeholder="Фільтр за назвою…">
+  </form>
+  <div id="visual-grid" class="gallery"></div>
+</section>
+
+<!-- ⬇ Оновлення з проду -->
+<section class="panel" data-panel="prod">
+  <div class="grid-2">
+    <div class="card">
+      <h3>Звідки оновлювати</h3>
+      <div class="row">
+        <label class="check"><input type="radio" name="prod-mode" value="git"> Git (fetch + pull)</label>
+        <label class="check"><input type="radio" name="prod-mode" value="command"> Своя команда</label>
+      </div>
+      <div id="prod-git-fields" class="row">
+        <label class="grow">Remote <input class="input mono" id="prod-remote" placeholder="origin"></label>
+        <label class="grow">Гілка проду <input class="input mono" id="prod-branch" placeholder="поточна гілка"></label>
+      </div>
+      <label id="prod-cmd-field">Команда (виконується в папці проекту)
+        <textarea class="input mono" id="prod-cmd" rows="3" placeholder="rsync -avz user@server:/srv/app/ ./&#10;або: ssh prod 'pg_dump app' > dump.sql"></textarea></label>
+      <div class="row end">
+        <button class="btn" type="button" id="prod-save">💾 Зберегти</button>
+        <button class="btn btn-primary" type="button" id="prod-run">⬇️ Оновити з проду</button>
+      </div>
+      <div id="prod-warning"></div>
+    </div>
+    <div class="card">
+      <h3>Останні оновлення</h3>
+      <ul class="list" id="prod-runs"></ul>
+    </div>
+  </div>
+  <div id="prod-output"></div>
+</section>
+
+<!-- 🕘 Історія змін -->
+<section class="panel" data-panel="history">
+  <div class="grid-2">
+    <div class="card">
+      <h3>Зміни через застосунок</h3>
+      <ul class="list" id="hist-changes"></ul>
+    </div>
+    <div class="card">
+      <h3>Git-коміти</h3>
+      <ul class="list" id="hist-commits"></ul>
+    </div>
+  </div>
+  <div id="hist-detail"></div>
+</section>
+
+<!-- 💥 Падіння, помилки -->
+<section class="panel" data-panel="errors">
+  <div class="grid-2">
+    <div class="card">
+      <h3 class="row between">Інциденти
+        <span class="row">
+          <select class="input input-sm" id="err-status">
+            <option value="open">Відкриті</option><option value="resolved">Вирішені</option><option value="all">Усі</option>
+          </select>
+          <button class="btn btn-sm" type="button" id="err-add">➕ Додати</button>
+        </span>
+      </h3>
+      <ul class="list" id="err-list"></ul>
+      <details class="small">
+        <summary>📡 Як проект може сам надсилати помилки сюди</summary>
+        <div id="err-ingest"></div>
+      </details>
+    </div>
+    <div class="card">
+      <h3 class="row between">Лог-файли <button class="btn btn-sm" type="button" data-reload="errors">🔄</button></h3>
+      <ul class="list" id="err-logs"></ul>
+    </div>
+  </div>
+  <div id="err-detail"></div>
+</section>
+
+<!-- 🌳 Структура проекту -->
+<section class="panel" data-panel="structure">
+  <div id="struct-stats"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Дерево проекту</h3><div id="struct-tree" class="tree-view mono small"></div></div>
+    <div class="card"><h3>Найбільші файли</h3><table class="table small" id="struct-largest"><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ✅ Тести + Git -->
+<section class="panel" data-panel="tests">
+  <div class="grid-2">
+    <div class="card">
+      <h3>Тести</h3>
+      <div class="row">
+        <input class="input grow mono" id="tests-cmd" placeholder="python -m pytest -q">
+        <button class="btn btn-primary" type="button" id="tests-run">▶ Запустити</button>
+      </div>
+      <label class="check small"><input type="checkbox" id="tests-save" checked> Запам'ятати команду для проекту</label>
+      <div id="tests-result"></div>
+      <h4>Історія запусків</h4>
+      <ul class="list" id="tests-history"></ul>
+    </div>
+    <div class="card">
+      <h3 class="row between">Git <span class="row">
+        <button class="btn btn-sm" type="button" data-git="fetch">⟳ Fetch</button>
+        <button class="btn btn-sm" type="button" data-git="pull">⬇ Pull</button>
+        <button class="btn btn-sm" type="button" data-git="push">⬆ Push</button></span></h3>
+      <div id="git-content"></div>
+    </div>
+  </div>
+  <div id="git-diff"></div>
+</section>
+
+<!-- ⚙ Налаштування -->
+<section class="panel" data-panel="settings">
+  <div class="card narrow">
+    <h3>Налаштування проекту</h3>
+    <label>Назва <input class="input" id="set-name"></label>
+    <label>Шлях на диску <input class="input mono" id="set-path" readonly></label>
+    <label>Команда запуску <input class="input mono" id="set-run" placeholder="визначається автоматично"></label>
+    <label>Команда тестів <input class="input mono" id="set-test" placeholder="визначається автоматично"></label>
+    <label>Базовий URL API <input class="input mono" id="set-api" placeholder="http://127.0.0.1:5000"></label>
+    <label class="check"><input type="checkbox" id="set-fav"> ⭐ В обраних (показувати першим)</label>
+    <div class="row end"><button class="btn btn-primary" type="button" id="set-save">💾 Зберегти</button></div>
+    <hr>
+    <h4>Ключ для надсилання помилок</h4>
+    <div class="row"><code class="grow" id="set-key"></code><button class="btn btn-sm" type="button" id="set-key-new">🔁 Новий ключ</button></div>
+    <hr>
+    <h4>Небезпечна зона</h4>
+    <p class="muted small">Прибирає проект зі списку. Файли на диску не видаляються.</p>
+    <button class="btn btn-danger" type="button" id="set-remove">🗑 Прибрати зі списку</button>
+  </div>
+</section>
+
+<dialog id="dlg-prompt" class="dialog">
+  <form method="dialog">
+    <h3 id="prompt-title"></h3>
+    <div id="prompt-body"></div>
+    <div class="row end">
+      <button class="btn" type="button" data-close>Скасувати</button>
+      <button class="btn btn-primary" value="ok" type="submit">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-image" class="dialog dialog-wide">
+  <form method="dialog">
+    <div class="row between"><strong id="img-title" class="mono"></strong><button class="btn btn-sm" type="button" data-close>✕</button></div>
+    <div class="img-view"><img id="img-full" alt=""></div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script>window.PROJECT_ID = {{ project.id }};</script>
+<script src="{{ url_for('static', filename=cm ~ 'codemirror.js') }}"></script>
+{% for f in ['addon/simple.js', 'addon/matchbrackets.js', 'addon/closebrackets.js', 'addon/active-line.js',
+             'addon/comment.js', 'addon/dialog.js', 'addon/searchcursor.js', 'addon/search.js', 'addon/jump-to-line.js',
+             'mode/xml.js', 'mode/javascript.js', 'mode/css.js', 'mode/htmlmixed.js', 'mode/clike.js', 'mode/python.js',
+             'mode/sql.js', 'mode/markdown.js', 'mode/shell.js', 'mode/yaml.js', 'mode/go.js', 'mode/rust.js',
+             'mode/php.js', 'mode/dockerfile.js', 'mode/jinja2.js', 'mode/diff.js', 'mode/toml.js', 'mode/properties.js'] %}
+<script src="{{ url_for('static', filename=cm ~ f) }}"></script>
+{% endfor %}
+<script src="{{ url_for('static', filename='js/project.js') }}"></script>
+{% endblock %}

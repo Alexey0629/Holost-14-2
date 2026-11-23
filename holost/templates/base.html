@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}Всі проекти{% endblock %} · Holost</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {% block head %}{% endblock %}
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("holost-theme");
+        if (t) document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('pages.index') }}">🗂️ <span>Всі проекти</span></a>
+    <div class="topbar-crumbs">{% block crumbs %}{% endblock %}</div>
+    <button class="btn btn-ghost" id="theme-toggle" type="button" title="Світла / темна тема">🌓</button>
+  </header>
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
